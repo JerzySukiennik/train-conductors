@@ -1,0 +1,141 @@
+<!-- ui-preview.html — static mockup harness for Grand Conductors Liquid Glass UI. -->
+<!-- Loads the real v1 CSS files and renders hard-coded sample DOM for 4 key screens: -->
+<!-- TV connect, TV in-game HUD, pad game layout, pad lobby (host). Query params drive which -->
+<!-- screen is shown and whether the dev toolbar is hidden (for clean screenshots). -->
+<!-- Usage: ?screen=tv-connect|tv-hud|pad-game|pad-lobby&bare=1 -->
+<meta charset="utf-8">
+<link rel="stylesheet" href="../v1/css/glass.css?v=2">
+<link rel="stylesheet" href="../v1/css/tv.css?v=2">
+<link rel="stylesheet" href="../v1/css/pad.css?v=2">
+<style>
+  /* preview-only chrome, never shipped */
+  #dev-toolbar {
+    position: fixed; top: 0; left: 0; z-index: 9999;
+    display: flex; gap: 4px; padding: 4px 6px;
+    background: rgba(0,0,0,0.65); font: 11px/1.4 monospace; color: #fff;
+  }
+  #dev-toolbar button {
+    font: inherit; color: #fff; background: #333; border: 1px solid #555;
+    border-radius: 3px; padding: 2px 6px; cursor: pointer;
+  }
+  #dev-toolbar button.active { background: #1E88E5; border-color: #1E88E5; }
+  body.bare #dev-toolbar { display: none; }
+</style>
+
+<div id="dev-toolbar">
+  <button data-screen="tv-connect">TV connect</button>
+  <button data-screen="tv-hud">TV HUD</button>
+  <button data-screen="pad-game">Pad game</button>
+  <button data-screen="pad-lobby">Pad lobby</button>
+</div>
+<div id="stage"></div>
+
+<script>
+/* Sample DOM below mirrors the trees in Niepotrzebne/UIBRIEF.md exactly (ids/classes) —
+   it is NOT independently invented markup, it's what hud.js/pad.js/lobby.js must build. */
+const SCREENS = {
+  "tv-connect": { role: "tv", html: `
+    <canvas id="scene-canvas" style="background:linear-gradient(180deg,#1B3A5C,#274C7A 55%,#7CBF3F 100%)"></canvas>
+    <div id="screen-connect" class="tv-screen">
+      <h1 class="tv-title txt-shadow">Grand Conductors<br>All aboard!</h1>
+      <p class="tv-subtitle">Scan to join — up to 3 conductors</p>
+      <div class="qr-card">
+        <div id="qr-connect" style="width:100%;aspect-ratio:1;background:
+          repeating-linear-gradient(90deg,#000 0 10%, #fff 0 20%),
+          repeating-linear-gradient(0deg,#000 0 10%, transparent 0 20%);"></div>
+      </div>
+      <div id="room-code" class="glass-chip">ABCD</div>
+      <p class="connect-hint">or go to grandconductors.app and enter the code</p>
+    </div>
+  `},
+  "tv-hud": { role: "tv", html: `
+    <canvas id="scene-canvas" style="background:linear-gradient(180deg,#274C7A,#7CBF3F 70%)"></canvas>
+    <div id="hud-bar" class="glass-panel">
+      <div id="hud-level"><span class="glass-badge">3</span></div>
+      <div id="hud-score"><span class="delivered">12</span><span class="goal">/20</span></div>
+      <div id="hud-timer">01:42</div>
+      <div id="hud-players">
+        <div class="player-chip glass-chip slot-0"><canvas class="chip-portrait"></canvas><span class="name">Jurek</span></div>
+        <div class="player-chip glass-chip slot-1"><canvas class="chip-portrait"></canvas><span class="name">Ola</span></div>
+        <div class="player-chip glass-chip slot-2 offline"><canvas class="chip-portrait"></canvas><span class="name">Bot</span></div>
+      </div>
+    </div>
+    <div id="warn-flash"></div>
+  `},
+  "pad-game": { role: "pad", bodyClass: "slot-1", html: `
+    <div class="ambient-bg"></div>
+    <div id="screen-pad" class="pad-screen">
+      <div id="zone-throttle">
+        <div id="throttle-hit">
+          <div id="throttle" class="glass-slider vertical">
+            <div class="track-fill" style="transform:scaleY(0.6)"></div>
+            <div class="thumb" style="transform:translate(-50%,50%) translateY(-60%)"></div>
+          </div>
+        </div>
+        <div id="speed-readout" class="glass-chip">60%</div>
+      </div>
+      <div id="zone-center">
+        <div id="status-strip" class="glass-panel">
+          <span id="pad-timer">01:42</span><span class="sep">|</span><span id="pad-score">12/20</span><span class="sep">|</span><span id="pad-speed">60%</span>
+        </div>
+        <div id="switch-grid">
+          <button class="glass-key" data-switch="A"><span class="letter">A</span><span class="state">&#8674;</span></button>
+          <button class="glass-key flipped" data-switch="B"><span class="letter">B</span><span class="state">&#8674;</span></button>
+          <button class="glass-key" data-switch="C"><span class="letter">C</span><span class="state">&#8674;</span></button>
+          <button class="glass-key" data-switch="D"><span class="letter">D</span><span class="state">&#8674;</span></button>
+        </div>
+      </div>
+      <div id="zone-right">
+        <button id="btn-horn" class="glass-btn primary">&#128239;<small>HORN</small></button>
+      </div>
+    </div>
+    <button id="btn-hostmenu" class="glass-btn ghost">&#9776;</button>
+  `},
+  "pad-lobby": { role: "pad", bodyClass: "slot-0", html: `
+    <div class="ambient-bg"></div>
+    <div id="screen-lobby-host" class="pad-screen">
+      <div class="avatar-half">
+        <div class="avatar-title"><span class="nick">Jurek</span><span class="av-name">Steampunk</span></div>
+        <div class="avatar-picker">
+          <button id="btn-av-prev" class="glass-arrow">&#8249;</button>
+          <canvas id="avatar-canvas" style="background:radial-gradient(circle,#8a5a2f,#3b2412)"></canvas>
+          <button id="btn-av-next" class="glass-arrow">&#8250;</button>
+        </div>
+        <button id="btn-ready" class="glass-btn lg on">Ready &#10003;</button>
+      </div>
+      <div id="host-settings" class="glass-panel">
+        <div class="set-row"><label>Difficulty</label><div id="seg-difficulty" class="glass-seg"><button class="on">Easy</button><button>Normal</button><button>Hard</button></div></div>
+        <div class="set-row"><label>Players</label><div id="step-players" class="glass-stepper"><button class="minus">-</button><span class="num">2</span><button class="plus">+</button></div></div>
+        <div class="set-row"><label>Levels</label><div id="step-levels" class="glass-stepper"><button class="minus">-</button><span class="num">3</span><button class="plus">+</button></div></div>
+        <div class="set-row"><label>Language</label><div id="seg-lang" class="glass-seg"><button class="on">PL</button><button>EN</button></div></div>
+        <button id="btn-start" class="glass-btn primary lg">Start!</button>
+      </div>
+    </div>
+  `}
+};
+
+function render() {
+  const params = new URLSearchParams(location.search);
+  const key = params.get("screen") || "tv-connect";
+  const bare = params.get("bare") === "1";
+  const def = SCREENS[key] || SCREENS["tv-connect"];
+  document.documentElement.className = def.role;
+  // slot-N belongs on <body> per UIBRIEF (pad); keep bare-mode toggle alongside it.
+  document.body.className = [bare ? "bare" : "", def.bodyClass || ""].filter(Boolean).join(" ");
+  document.getElementById("stage").innerHTML = def.html;
+  document.querySelectorAll("#dev-toolbar button").forEach(b => {
+    b.classList.toggle("active", b.dataset.screen === key);
+  });
+}
+
+document.getElementById("dev-toolbar").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-screen]");
+  if (!b) return;
+  const params = new URLSearchParams(location.search);
+  params.set("screen", b.dataset.screen);
+  history.replaceState(null, "", "?" + params.toString());
+  render();
+});
+
+render();
+</script>

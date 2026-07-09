@@ -1,0 +1,301 @@
+/* pad.css — phone controller layouts (LANDSCAPE only, no scroll, 100dvh, safe areas). */
+
+html.pad { font-size: clamp(13px, 4.3dvh, 18px); } /* ~16px @375dvh-tall landscape */
+
+.pad body {
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
+  touch-action: none;
+}
+
+.pad-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(0.8rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+           max(0.8rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+}
+
+/* ---------- (b) Portrait blocker ---------- */
+
+#portrait-blocker {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: #12233B;
+  text-align: center;
+}
+#portrait-blocker .rotate-ico { font-size: 4rem; animation: rotate-hint 1.6s var(--spring) infinite; }
+#portrait-blocker .rotate-msg { font-size: 1.3rem; font-weight: 600; padding: 0 2rem; }
+@keyframes rotate-hint {
+  0%, 20% { transform: rotate(0deg); }
+  60%, 100% { transform: rotate(-90deg); }
+}
+@media (orientation: portrait) {
+  #portrait-blocker { display: flex; }
+  .pad-screen { visibility: hidden; }
+}
+
+/* ---------- (a) Join screen ---------- */
+
+#screen-join { flex-direction: row; gap: 1.2rem; }
+#screen-join .join-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.4rem 1.8rem;
+  max-width: 92vw;
+}
+#screen-join .field { display: flex; flex-direction: column; gap: 0.35rem; }
+#screen-join label { font-size: 0.85rem; font-weight: 600; color: var(--ink-dim); }
+#screen-join input {
+  font: inherit;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--glass-bg-soft);
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--glass-stroke-soft), inset 0 2px 6px rgba(0,0,0,0.25);
+  padding: 0.5em 0.8em;
+  width: 9ch;
+  text-align: center;
+  -webkit-user-select: text;
+  user-select: text;
+}
+#screen-join input:focus { outline: none; box-shadow: inset 0 0 0 2px var(--glass-stroke); }
+#inp-code { text-transform: uppercase; letter-spacing: 0.3em; }
+#inp-nick { width: 12ch; letter-spacing: normal; }
+
+/* ---------- (c) Lobby — player ---------- */
+
+#screen-lobby-player { flex-direction: column; gap: 0.4rem; }
+.avatar-picker {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex: 1;
+  min-height: 0;
+}
+#avatar-canvas {
+  height: 100%;
+  max-height: 52dvh;
+  aspect-ratio: 1;
+  display: block;
+}
+.avatar-title { display: flex; align-items: baseline; gap: 0.7rem; font-size: 1.25rem; font-weight: 700; }
+.avatar-title .nick { color: var(--ink-dim); font-weight: 500; font-size: 1rem; }
+.avatar-title .av-name { color: var(--accent); filter: brightness(1.35); }
+#btn-ready { min-width: 14rem; }
+#btn-ready.on {
+  background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.06)), var(--c-ok);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5), 0 6px 20px rgba(67,196,99,0.4);
+}
+.glass-arrow.taken-hint { opacity: 0.85; }
+
+/* ---------- (d) Lobby — host ---------- */
+
+#screen-lobby-host { flex-direction: row; gap: 1rem; align-items: stretch; }
+#screen-lobby-host .avatar-half {
+  flex: 1 1 42%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+#screen-lobby-host .avatar-picker { width: 100%; justify-content: center; gap: 0.6rem; }
+#screen-lobby-host #avatar-canvas { max-height: 34dvh; }
+#screen-lobby-host .glass-arrow { width: 3rem; height: 3rem; font-size: 1.2rem; }
+#screen-lobby-host #btn-ready { min-width: 10rem; min-height: 2.8rem; font-size: 1rem; }
+
+#host-settings {
+  flex: 1 1 58%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.9rem 1.1rem;
+  min-width: 0;
+}
+#host-settings .set-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+#host-settings .set-row > label { flex: 0 0 5.5rem; color: var(--ink-dim); }
+#host-settings .glass-seg { flex: 1; }
+.glass-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.glass-stepper button {
+  width: 2.4rem;
+  height: 2.4rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg-strong);
+  box-shadow: inset 0 0 0 1px var(--glass-stroke);
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform var(--t-fast) var(--spring);
+}
+.glass-stepper button:active { transform: scale(0.9); }
+.glass-stepper button:disabled { opacity: 0.35; pointer-events: none; }
+.glass-stepper .num { min-width: 1.6ch; text-align: center; font-size: 1.2rem; font-weight: 700; }
+#btn-start { margin-top: 0.3rem; }
+
+/* ---------- (e) Game pad ---------- */
+
+#screen-pad {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr 7.5rem;
+  gap: 0.8rem;
+  align-items: stretch;
+}
+
+#zone-throttle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+}
+#throttle-hit { flex: 1; width: 100%; display: flex; justify-content: center; min-height: 0; touch-action: none; }
+#speed-readout {
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 0.2em 0.8em;
+}
+
+#zone-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+#status-strip {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  padding: 0.35rem 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+#status-strip .sep { opacity: 0.35; }
+#pad-timer.low { color: var(--c-danger); animation: pulse-warn 1s infinite; }
+#switch-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: 0.6rem;
+  max-width: 20rem;
+}
+#switch-grid .glass-key { width: 4rem; height: 4rem; }
+#switch-grid.dense .glass-key { width: 3.4rem; height: 3.4rem; font-size: 1.4rem; } /* 7-8 keys */
+
+#zone-right {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding-bottom: 0.3rem;
+}
+#btn-horn {
+  width: 6.5rem;
+  height: 6.5rem;
+  border-radius: 50%;
+  font-size: 2.2rem;
+  padding: 0;
+}
+#btn-horn small { position: absolute; bottom: 0.9rem; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; }
+#btn-hostmenu {
+  position: fixed;
+  top: max(0.7rem, env(safe-area-inset-top));
+  right: max(0.7rem, env(safe-area-inset-right));
+  z-index: 25;
+  width: 2.8rem;
+  height: 2.8rem;
+  min-height: 0;
+  padding: 0;
+  border-radius: var(--radius-md);
+  font-size: 1.2rem;
+}
+
+/* collision warning vignette */
+body.warn::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(229,57,53,0.55));
+  animation: pulse-warn 0.6s infinite;
+}
+
+/* ---------- Host panel modal ---------- */
+
+#hostpanel .glass-modal { display: flex; flex-direction: column; gap: 0.7rem; }
+#hostpanel .hp-title { margin: 0 0 0.3rem; font-size: 1.2rem; font-weight: 700; }
+#hostpanel .kick-list { display: flex; flex-direction: column; gap: 0.45rem; }
+#hostpanel .kick-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  font-weight: 600;
+}
+
+/* ---------- (f) Paused / disconnected overlays ---------- */
+
+.pad-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  background: rgba(8, 16, 30, 0.6);
+  -webkit-backdrop-filter: var(--glass-blur-light);
+  backdrop-filter: var(--glass-blur-light);
+  text-align: center;
+}
+.pad-overlay .ov-title { margin: 0; font-size: 2rem; font-weight: 700; }
+.pad-overlay .ov-sub { font-size: 1rem; color: var(--ink-dim); padding: 0 2rem; }
+#overlay-disconnected { z-index: 95; }
+#overlay-disconnected .spinner {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  border: 3px solid var(--glass-stroke-soft);
+  border-top-color: var(--ink);
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

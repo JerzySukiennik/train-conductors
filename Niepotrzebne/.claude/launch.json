@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "avatar-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8741", "--directory", "/Users/jurek/Downloads/Claude/Projects/Train-Conductors"],
+      "port": 8741
+    }
+  ]
+}

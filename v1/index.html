@@ -1,0 +1,164 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0e1726" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Grand Conductors</title>
+
+<script>
+  (function () {
+    var role = new URLSearchParams(location.search).get("role") === "controller" ? "controller" : "display";
+    document.documentElement.className = role === "controller" ? "pad" : "tv";
+    function css(href) {
+      var l = document.createElement("link");
+      l.rel = "stylesheet";
+      l.href = href;
+      document.head.appendChild(l);
+    }
+    css("css/glass.css");
+    css(role === "controller" ? "css/pad.css" : "css/tv.css");
+    window.__ROLE__ = role;
+  })();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap&subset=latin,latin-ext" rel="stylesheet" />
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs@04f46c6a0708418cb7b96fc563eacae0fbf77674/qrcode.min.js"></script>
+
+<style>
+  #boot-splash {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background: radial-gradient(circle at 50% 30%, #1b2a44, #0b1220);
+    color: #eaf1ff;
+    font-family: Fredoka, ui-rounded, system-ui, sans-serif;
+    z-index: 9999;
+  }
+  #boot-splash .spin {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 5px solid rgba(255, 255, 255, 0.18);
+    border-top-color: #7cc4ff;
+    animation: bs 0.9s linear infinite;
+  }
+  #boot-splash .bs-label { font-size: 1.1rem; letter-spacing: 0.03em; opacity: 0.9; }
+  @keyframes bs { to { transform: rotate(360deg); } }
+</style>
+
+<div id="boot-splash"><div class="spin"></div><div class="bs-label">Grand Conductors…</div></div>
+
+<template id="tpl-tv">
+  <div id="tv-root">
+    <div id="scene-canvas"></div>
+    <div id="hud-root"></div>
+  </div>
+</template>
+
+<template id="tpl-pad">
+  <div class="ambient-bg"></div>
+
+  <div id="portrait-blocker">
+    <div class="rotate-ico">📱</div>
+    <p class="rotate-msg"></p>
+  </div>
+
+  <div id="screen-join" class="pad-screen">
+    <form class="join-panel glass-panel">
+      <div class="field"><label></label><input id="inp-code" maxlength="4" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="text" /></div>
+      <div class="field"><label></label><input id="inp-nick" maxlength="14" autocomplete="off" /></div>
+      <button id="btn-join" class="glass-btn primary lg" type="submit"></button>
+    </form>
+  </div>
+
+  <div id="screen-lobby-player" class="pad-screen hidden">
+    <div class="avatar-title"><span class="nick"></span><span class="av-name"></span></div>
+    <div class="avatar-picker">
+      <button id="btn-av-prev" class="glass-arrow" type="button">‹</button>
+      <canvas id="avatar-canvas"></canvas>
+      <button id="btn-av-next" class="glass-arrow" type="button">›</button>
+    </div>
+    <button id="btn-ready" class="glass-btn lg" type="button"></button>
+  </div>
+
+  <div id="screen-lobby-host" class="pad-screen hidden">
+    <div class="avatar-half">
+      <div class="avatar-title"><span class="nick"></span><span class="av-name"></span></div>
+      <div class="avatar-picker"></div>
+    </div>
+    <div id="host-settings" class="glass-panel">
+      <div class="set-row"><label></label><div id="seg-difficulty" class="glass-seg"><button type="button"></button><button type="button"></button><button type="button"></button></div></div>
+      <div class="set-row"><label></label><div id="step-players" class="glass-stepper"><button class="minus" type="button">−</button><span class="num">1</span><button class="plus" type="button">+</button></div></div>
+      <div class="set-row"><label></label><div id="step-levels" class="glass-stepper"><button class="minus" type="button">−</button><span class="num">1</span><button class="plus" type="button">+</button></div></div>
+      <div class="set-row"><label></label><div id="seg-lang" class="glass-seg"><button type="button">PL</button><button type="button">EN</button></div></div>
+      <button id="btn-start" class="glass-btn primary lg" type="button" disabled></button>
+    </div>
+  </div>
+
+  <div id="screen-pad" class="pad-screen hidden">
+    <div id="zone-throttle">
+      <div id="throttle-hit">
+        <div id="throttle" class="glass-slider vertical">
+          <div class="track-fill"></div>
+          <div class="thumb"></div>
+        </div>
+      </div>
+      <div id="speed-readout" class="glass-chip">0%</div>
+    </div>
+    <div id="zone-center">
+      <div id="status-strip" class="glass-panel">
+        <span id="pad-timer">0:00</span><span class="sep">·</span><span id="pad-score">0/0</span><span class="sep">·</span><span id="pad-speed">0%</span>
+      </div>
+      <div id="switch-grid"></div>
+    </div>
+    <div id="zone-right">
+      <button id="btn-horn" class="glass-btn primary" type="button">📯<small></small></button>
+    </div>
+  </div>
+
+  <button id="btn-hostmenu" class="glass-btn ghost hidden" type="button">☰</button>
+
+  <div id="hostpanel" class="glass-modal-backdrop">
+    <div class="glass-modal">
+      <h3 class="hp-title"></h3>
+      <button id="btn-pause" class="glass-btn" type="button"></button>
+      <button id="btn-end" class="glass-btn danger" type="button"></button>
+      <div class="kick-list"></div>
+    </div>
+  </div>
+
+  <div id="overlay-paused" class="pad-overlay hidden"><h2 class="ov-title"></h2><p class="ov-sub"></p></div>
+  <div id="overlay-disconnected" class="pad-overlay hidden"><div class="spinner"></div><h2 class="ov-title"></h2><p class="ov-sub"></p></div>
+</template>
+
+<script type="module">
+  const role = window.__ROLE__ || "display";
+  const tpl = document.getElementById(role === "controller" ? "tpl-pad" : "tpl-tv");
+  const frag = tpl.content.cloneNode(true);
+  document.body.appendChild(frag);
+  const entry = role === "controller" ? "./js/controller/main.js" : "./js/display/main.js";
+  import(entry)
+    .then(() => {
+      const s = document.getElementById("boot-splash");
+      if (s) setTimeout(() => s.remove(), 400);
+    })
+    .catch((e) => {
+      console.error("module load failed", e);
+      const s = document.getElementById("boot-splash");
+      if (s) s.querySelector(".bs-label").textContent = "Load error: " + (e && e.message ? e.message : e);
+    });
+</script>

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "static",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8741"],
+      "port": 8741
+    },
+    {
+      "name": "ui-audit",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8919", "--directory", "/Users/jurek/Downloads/Claude/Projects/Train-Conductors"],
+      "port": 8919
+    }
+  ]
+}

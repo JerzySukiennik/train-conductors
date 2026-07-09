@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Avatar Preview — Grand Conductors</title>
+<style>
+  html, body { margin: 0; background: #dfe6ee; font-family: system-ui, sans-serif; }
+  #stage { display: block; width: 100vw; height: 68vh; }
+  #portraits { display: flex; gap: 18px; justify-content: center; padding: 20px; }
+  #portraits figure { margin: 0; text-align: center; }
+  #portraits canvas { border-radius: 50%; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+  #portraits figcaption { font-size: 13px; color: #445; margin-top: 6px; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div id="portraits"></div>
+<script type="module">
+import * as THREE from "three";
+import { AVATAR_COUNT, AVATAR_META, buildPodiumAvatar, paintAvatarPortrait } from "../v1/js/shared/avatars.js";
+
+const names = ["Classic", "Steamer", "Signalman", "Granny", "Tinbot", "Ticket Cat"];
+
+const canvas = document.getElementById("stage");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xe8edf3);
+scene.fog = new THREE.Fog(0xe8edf3, 14, 30);
+
+const camera = new THREE.PerspectiveCamera(38, 2, 0.1, 100);
+camera.position.set(0, 2.1, 7.4);
+camera.lookAt(0, 1.0, 0);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+sun.position.set(4, 8, 6);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -8; sun.shadow.camera.right = 8;
+sun.shadow.camera.top = 8; sun.shadow.camera.bottom = -8;
+scene.add(sun);
+
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(20, 48),
+  new THREE.MeshStandardMaterial({ color: 0xf2f4f7, roughness: 1 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+const groups = [];
+for (let i = 0; i < AVATAR_COUNT; i++) {
+  const g = buildPodiumAvatar(i);
+  g.position.x = (i - (AVATAR_COUNT - 1) / 2) * 1.5;
+  scene.add(g);
+  groups.push(g);
+}
+console.log("avatars built:", groups.length, AVATAR_META);
+
+function resize() {
+  const w = innerWidth, h = Math.round(innerHeight * 0.68);
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize);
+resize();
+
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const t = clock.getElapsedTime();
+  for (const g of groups) {
+    const idle = g.userData.idle;
+    g.rotation.y = t * 0.6;
+    g.position.y = Math.abs(Math.sin(t * idle.bobSpeed + idle.phase)) * idle.bobAmp;
+  }
+  renderer.render(scene, camera);
+});
+
+const wrap = document.getElementById("portraits");
+for (let i = 0; i < AVATAR_COUNT; i++) {
+  const fig = document.createElement("figure");
+  const c = document.createElement("canvas");
+  paintAvatarPortrait(c, i, 96);
+  const cap = document.createElement("figcaption");
+  cap.textContent = i + " " + names[i];
+  fig.append(c, cap);
+  wrap.append(fig);
+}
+</script>
+</body>
+</html>

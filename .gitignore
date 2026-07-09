@@ -1,0 +1,9 @@
+node_modules/
+package.json
+package-lock.json
+.firebase/
+firebase-debug.log
+*.log
+.DS_Store
+**/.DS_Store
+Conduct DELUXE! Trailer.mp4
