@@ -1,0 +1,442 @@
+/* glass.css — Liquid Glass design system for Grand Conductors (shared TV + pad). */
+
+/* Registered so the reactive sheen position can be smoothed by a CSS transition (compositor-driven,
+   survives rAF throttling). Falls back gracefully where @property is unsupported. */
+@property --gx { syntax: "<length-percentage>"; inherits: true; initial-value: 50%; }
+@property --gy { syntax: "<length-percentage>"; inherits: true; initial-value: 0%; }
+
+:root {
+  transition: --gx 0.28s var(--ease-out, ease-out), --gy 0.28s var(--ease-out, ease-out);
+  /* surfaces */
+  --glass-bg: rgba(255, 255, 255, 0.11);
+  --glass-bg-strong: rgba(255, 255, 255, 0.18);
+  --glass-bg-soft: rgba(255, 255, 255, 0.06);
+  --glass-stroke: rgba(255, 255, 255, 0.35);
+  --glass-stroke-soft: rgba(255, 255, 255, 0.18);
+  /* depth-tiered blur: overlays/modals frost hardest, panels mid, chips lightest */
+  --glass-blur-strong: blur(30px) saturate(1.8);
+  --glass-blur: blur(18px) saturate(1.6);
+  --glass-blur-light: blur(10px) saturate(1.4);
+  --glass-shadow: 0 8px 32px rgba(10, 20, 40, 0.35);
+  /* static top specular + a crisp edge-light line for the "thick glass" read */
+  --specular: linear-gradient(180deg, rgba(255,255,255,0.30), rgba(255,255,255,0.06) 40%, rgba(255,255,255,0) 62%);
+  /* reactive sheen — a soft highlight that follows the pointer/tilt (updated via --gx/--gy on :root) */
+  --gx: 50%;
+  --gy: 0%;
+  --sheen: radial-gradient(60% 80% at var(--gx) var(--gy), rgba(255,255,255,0.20), rgba(255,255,255,0) 68%);
+  /* per-slot glass tint (set on the pad body); transparent elsewhere */
+  --glass-tint: transparent;
+  /* radii */
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
+  --radius-pill: 999px;
+  /* colors */
+  --c-red: #E53935;
+  --c-blue: #1E88E5;
+  --c-yellow: #FDD835;
+  --c-npc: #4E5A65;
+  --c-ok: #43C463;
+  --c-danger: #FF4D4A;
+  --accent: var(--c-blue);
+  --ink: #FFFFFF;
+  --ink-dim: rgba(255, 255, 255, 0.72);
+  --ink-faint: rgba(255, 255, 255, 0.5);
+  /* motion */
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --t-fast: 0.16s;
+  --t-med: 0.3s;
+  /* type — Sniglet = bubbly hero display, DynaPuff = rounded body (both full Polish support) */
+  --font-display: "Sniglet", "DynaPuff", ui-rounded, system-ui, sans-serif;
+  --font-body: "DynaPuff", ui-rounded, system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: #12233B;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+button { font: inherit; color: inherit; }
+
+/* Sniglet hero display for titles / big playful text; DynaPuff body elsewhere */
+h1, h2, h3, .tv-title, .result-title, .results-title, #room-code, .glass-key .letter,
+.count-num, .glass-badge, .avatar-title .av-name { font-family: var(--font-display); }
+
+/* ---------- Panel ---------- */
+
+.glass-panel {
+  position: relative;
+  background: linear-gradient(var(--glass-tint), var(--glass-tint)), var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-radius: var(--radius-lg);
+  box-shadow: inset 0 0 0 1px var(--glass-stroke), inset 0 1px 0 rgba(255,255,255,0.4), var(--glass-shadow);
+  overflow: hidden;
+}
+.glass-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--sheen), var(--specular);
+  pointer-events: none;
+}
+.glass-panel > * { position: relative; }
+
+/* ---------- Buttons ---------- */
+
+.glass-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  min-height: 3rem;
+  padding: 0.6em 1.5em;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur-light);
+  backdrop-filter: var(--glass-blur-light);
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--glass-stroke), inset 0 1px 0 rgba(255,255,255,0.35), 0 4px 16px rgba(10,20,40,0.3);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform var(--t-fast) var(--spring), box-shadow var(--t-fast) var(--ease-out), opacity var(--t-fast);
+  touch-action: manipulation;
+}
+.glass-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--sheen), var(--specular);
+  pointer-events: none;
+}
+.glass-btn:active, .glass-btn.pressed { transform: scale(0.96); }
+.glass-btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  transform: none;
+}
+.glass-btn:focus-visible, .glass-key:focus-visible, .glass-arrow:focus-visible, .glass-toggle:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.85);
+  outline-offset: 2px;
+}
+.glass-btn.primary {
+  background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.06)), var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5), 0 6px 20px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.glass-btn.danger {
+  background: linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.04)), var(--c-danger);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.45), 0 6px 20px rgba(255,77,74,0.4);
+}
+.glass-btn.ghost {
+  background: var(--glass-bg-soft);
+  box-shadow: inset 0 0 0 1px var(--glass-stroke-soft);
+}
+.glass-btn.lg { min-height: 3.75rem; font-size: 1.3rem; padding: 0.7em 2em; border-radius: var(--radius-lg); }
+.glass-btn.sm { min-height: 2.25rem; font-size: 0.9rem; padding: 0.4em 1em; border-radius: var(--radius-sm); }
+
+/* ---------- Round arrow button (avatar picker) ---------- */
+
+.glass-arrow {
+  position: relative;
+  width: 4rem;
+  height: 4rem;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur-light);
+  backdrop-filter: var(--glass-blur-light);
+  border: none;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--glass-stroke), inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 14px rgba(10,20,40,0.3);
+  font-size: 1.6rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform var(--t-fast) var(--spring);
+}
+.glass-arrow:active { transform: scale(0.9); }
+
+/* ---------- Chip / badge ---------- */
+
+.glass-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.3em 0.9em;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur-light);
+  backdrop-filter: var(--glass-blur-light);
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 0 0 1px var(--glass-stroke-soft);
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.glass-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.8em;
+  padding: 0.15em 0.55em;
+  background: var(--accent);
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.4);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* ---------- Slider (throttle) ---------- */
+
+.glass-slider {
+  position: relative;
+  border-radius: var(--radius-pill);
+  background: var(--glass-bg-soft);
+  -webkit-backdrop-filter: var(--glass-blur-light);
+  backdrop-filter: var(--glass-blur-light);
+  box-shadow: inset 0 0 0 1px var(--glass-stroke-soft), inset 0 2px 8px rgba(0,0,0,0.25);
+  touch-action: none;
+}
+.glass-slider .track-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,0.25), rgba(255,255,255,0)), var(--accent);
+  transform-origin: bottom;
+  pointer-events: none;
+}
+.glass-slider .thumb {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 132%;
+  aspect-ratio: 2.2 / 1;
+  transform: translate(-50%, 50%);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: inset 0 1px 0 #fff, 0 4px 14px rgba(10,20,40,0.45), 0 0 0 1px rgba(255,255,255,0.5);
+  pointer-events: none;
+}
+.glass-slider.vertical { width: 3.5rem; height: 100%; }
+.glass-slider.horizontal { height: 3.5rem; width: 100%; }
+.glass-slider.horizontal .track-fill { transform-origin: left; }
+.glass-slider.horizontal .thumb {
+  left: 0; bottom: 50%;
+  width: auto; height: 132%;
+  aspect-ratio: 1 / 2.2;
+  transform: translate(-50%, 50%);
+}
+
+/* ---------- Letter key (switch grid) ---------- */
+
+.glass-key {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 4.25rem;
+  height: 4.25rem;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur-light);
+  backdrop-filter: var(--glass-blur-light);
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--glass-stroke), inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 12px rgba(10,20,40,0.3);
+  font-weight: 700;
+  font-size: 1.7rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform var(--t-fast) var(--spring), box-shadow var(--t-fast);
+  touch-action: manipulation;
+}
+.glass-key:active, .glass-key.pressed { transform: scale(0.96); }
+.glass-key .state {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-dim);
+  margin-top: 0.1em;
+  transition: transform var(--t-med) var(--spring);
+}
+.glass-key.flipped .state { transform: scaleX(-1); }
+
+/* ---------- Toggle ---------- */
+
+.glass-toggle {
+  position: relative;
+  width: 3.6rem;
+  height: 2rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--glass-bg);
+  box-shadow: inset 0 0 0 1px var(--glass-stroke-soft), inset 0 2px 6px rgba(0,0,0,0.25);
+  cursor: pointer;
+  transition: background var(--t-med);
+}
+.glass-toggle::after {
+  content: "";
+  position: absolute;
+  top: 0.2rem;
+  left: 0.2rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 2px 8px rgba(10,20,40,0.4);
+  transition: transform var(--t-med) var(--spring);
+}
+.glass-toggle.on { background: var(--accent); }
+.glass-toggle.on::after { transform: translateX(1.6rem); }
+
+/* ---------- Segmented control ---------- */
+
+.glass-seg {
+  display: flex;
+  padding: 0.25rem;
+  gap: 0.25rem;
+  background: var(--glass-bg-soft);
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--glass-stroke-soft);
+}
+.glass-seg button {
+  flex: 1;
+  min-height: 2.4rem;
+  border: none;
+  border-radius: calc(var(--radius-md) - 0.25rem);
+  background: transparent;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: transform var(--t-fast) var(--spring), background var(--t-fast), color var(--t-fast);
+}
+.glass-seg button:active { transform: scale(0.95); }
+.glass-seg button.on {
+  background: var(--glass-bg-strong);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--glass-stroke), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+
+/* ---------- Modal ---------- */
+
+.glass-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70; /* pad: above pad-screen(10)/btn-hostmenu(25), below warn vignette(80)/pad-overlay(90) — see UIBRIEF z-map */
+  background: rgba(8, 16, 30, 0.4);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  backdrop-filter: var(--glass-blur-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-med) var(--ease-out);
+}
+.glass-modal-backdrop.open { opacity: 1; pointer-events: auto; }
+.glass-modal {
+  position: relative;
+  min-width: 18rem;
+  max-width: min(90vw, 34rem);
+  max-height: 88dvh;
+  padding: 1.5rem;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-radius: var(--radius-lg);
+  box-shadow: inset 0 0 0 1px var(--glass-stroke), var(--glass-shadow);
+  overflow-y: auto;
+  transform: scale(0.92) translateY(10px);
+  transition: transform var(--t-med) var(--spring);
+}
+.glass-modal-backdrop.open .glass-modal { transform: none; }
+.glass-modal::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 40%;
+  border-radius: inherit;
+  background: var(--specular);
+  pointer-events: none;
+}
+
+/* ---------- Ambient animated backdrop (pads) ---------- */
+
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(140deg, #1B3A5C, #274C7A 30%, #1E6E5C 65%, #1B3A5C);
+  overflow: hidden;
+}
+.ambient-bg::before, .ambient-bg::after {
+  content: "";
+  position: absolute;
+  width: 65vmax;
+  height: 65vmax;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.5;
+  will-change: transform;
+}
+.ambient-bg::before {
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 55%, transparent), transparent 65%);
+  top: -25vmax; left: -15vmax;
+  animation: amb-a 16s ease-in-out infinite alternate;
+}
+.ambient-bg::after {
+  background: radial-gradient(circle, rgba(124,191,63,0.45), transparent 65%);
+  bottom: -30vmax; right: -18vmax;
+  animation: amb-b 21s ease-in-out infinite alternate;
+}
+@keyframes amb-a { to { transform: translate(16vmax, 10vmax) scale(1.15); } }
+@keyframes amb-b { to { transform: translate(-14vmax, -8vmax) scale(0.9); } }
+
+/* ---------- Text readability utilities ---------- */
+
+.txt-shadow { text-shadow: 0 1px 3px rgba(8,16,30,0.6), 0 3px 12px rgba(8,16,30,0.4); }
+.scrim {
+  background: linear-gradient(180deg, rgba(8,16,30,0), rgba(8,16,30,0.45));
+  border-radius: var(--radius-md);
+}
+.dim { color: var(--ink-dim); }
+
+/* ---------- Shared helpers ---------- */
+
+.hidden { display: none !important; }
+.slot-0 { --accent: var(--c-red); }
+.slot-1 { --accent: var(--c-blue); }
+.slot-2 { --accent: var(--c-yellow); }
+
+/* On the pad, glass surfaces take a faint wash of the player's slot color. */
+html.pad body.slot-0, html.pad body.slot-1, html.pad body.slot-2 {
+  --glass-tint: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.85) translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.pop-in { animation: pop-in var(--t-med) var(--spring) both; }
+
+@keyframes pulse-warn { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.85; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
