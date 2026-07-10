@@ -1048,15 +1048,20 @@ export function buildLobbyPodiums(sc, count) {
       }
     },
     dispose() {
-      for (const s of slots) {
-        if (s.avatarModel) s.avatarModel.traverse((o) => { if (o.isMesh) { o.geometry && o.geometry.dispose(); const m = o.material; if (Array.isArray(m)) m.forEach((x) => x && x.dispose()); else m && m.dispose(); } });
-        s.label._tex.dispose();
-        s.label.material.dispose();
-        s.baseMat.dispose(); s.topMat.dispose(); s.ringMat.dispose();
-        s.ring.geometry.dispose();
-      }
+      // Remove from the scene FIRST so a later disposal error can never leave podiums on screen.
       if (sc && sc.scene) sc.scene.remove(group);
-      group.traverse((o) => { if ((o.isMesh) && o.geometry) o.geometry.dispose(); });
+      for (const s of slots) {
+        try {
+          if (s.avatarModel) s.avatarModel.traverse((o) => { if (o.isMesh) { o.geometry && o.geometry.dispose(); const m = o.material; if (Array.isArray(m)) m.forEach((x) => x && x.dispose()); else m && m.dispose(); } });
+          if (s.label && s.label._tex) s.label._tex.dispose();
+          if (s.label && s.label.material) s.label.material.dispose();
+          s.baseMat && s.baseMat.dispose();
+          s.topMat && s.topMat.dispose();
+          s.ringMat && s.ringMat.dispose();
+          s.ring && s.ring.geometry && s.ring.geometry.dispose();
+        } catch (e) {}
+      }
+      try { group.traverse((o) => { if (o.isMesh && o.geometry) o.geometry.dispose(); }); } catch (e) {}
     },
     bounds: { w: n * spacing + 2.4, h: 5.2, d: 3.6 },
   };
